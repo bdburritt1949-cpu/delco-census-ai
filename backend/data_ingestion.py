@@ -2,12 +2,14 @@ import os
 import pandas as pd
 import requests
 from typing import Optional, Dict, List
+
 from backend.config import (
     RAW_DIR,
     DELAWARE_COUNTY_FIPS,
     CENSUS_BASE_URL,
     CENSUS_API_KEY
 )
+
 def load_local_file(path: str) -> pd.DataFrame:
     ext = os.path.splitext(path)[1].lower()
     if ext == ".csv":
@@ -18,7 +20,6 @@ def load_local_file(path: str) -> pd.DataFrame:
         return pd.read_json(path)
     else:
         raise ValueError(f"Unsupported file type: {ext}")
-
 def filter_delaware_county(df: pd.DataFrame,
                            state_col: str = "state",
                            county_col: str = "county") -> pd.DataFrame:
