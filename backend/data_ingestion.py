@@ -57,7 +57,7 @@ def fetch_census_api(
     df = pd.DataFrame(rows, columns=cols)
     return df
 
-def save_raw(df: pd.DataFrame, name: str) -> str:
+def_save_raw(df: pd.DataFrame, name: str) -> str:
     path = os.path.join(RAW_DIR, f"{name}.csv")
     df.to_csv(path, index=False)
     return path
