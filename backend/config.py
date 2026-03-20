@@ -1,21 +1,26 @@
 import os
 from dotenv import load_dotenv
 
+# Load environment variables safely
 load_dotenv()
 
-# Example: you can store API keys or base URLs here
-CENSUS_API_KEY = os.getenv("CENSUS_API_KEY", "")
-CENSUS_BASE_URL = "https://api.census.gov/data"
+# -----------------------------
+# PATHS
+# -----------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
-# Default geography for Delaware County, PA
-DELAWARE_COUNTY_FIPS = {
-    "state": "42",   # Pennsylvania
-    "county": "045", # Delaware County
-}
+# Example dataset paths
+CENSUS_DATA_PATH = os.path.join(DATA_DIR, "delco_census.csv")
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-RAW_DIR = os.path.join(DATA_DIR, "raw")
-PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
+# -----------------------------
+# API KEYS
+# -----------------------------
+CENSUS_API_KEY = os.getenv("CENSUS_API_KEY")
 
-os.makedirs(RAW_DIR, exist_ok=True)
-os.makedirs(PROCESSED_DIR, exist_ok=True)
+# -----------------------------
+# APP SETTINGS
+# -----------------------------
+DEFAULT_YEAR = 2020
+DEFAULT_METRIC = "population"
+DEFAULT_COUNTY = "Delaware County"
