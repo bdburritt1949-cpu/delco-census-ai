@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-from nlp_query_engine import parse_query, map_intents_to_columns, generate_insight
-from data_ingestion import fetch_census_api, load_local_file, filter_delaware_county
-from data_processing import clean_dataframe, subset_columns
-from output_generator import generate_basic_plot
+from backend.data_ingestion import ...
+from backend.data_processing import ...
+from backend.output_generator import generate_basic_plot
+from backend.nlp_query_engine import ...
+from backend.config import ...
 
 st.set_page_config(
     page_title="Delaware County Census AI",
