@@ -1,0 +1,9 @@
+pandas
+requests
+openpyxl
+xlrd
+python-dotenv
+scikit-learn
+flask
+matplotlib
+seaborn
