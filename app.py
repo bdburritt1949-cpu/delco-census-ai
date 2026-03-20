@@ -1,78 +1,127 @@
 import streamlit as st
 import pandas as pd
 
-# Backend imports (we will fill these in once you send the files)
-# from backend.data_ingestion import load_data
-# from backend.data_processing import process_data
-# from backend.output_generator import generate_basic_plot
-# from backend.nlp_query_engine import parse_query
-# from backend.config import DEFAULT_YEAR, DEFAULT_METRIC
+# Backend imports
+from backend.data_ingestion import (
+    load_local_file,
+    filter_delaware_county,
+    fetch_census_api,
+    save_raw_df
+)
 
+from backend.config import (
+    CENSUS_DATA_PATH,
+    DEFAULT_YEAR,
+    DEFAULT_METRIC,
+    DEFAULT_COUNTY
+)
+
+# -----------------------------------
+# Streamlit Page Setup
+# -----------------------------------
 st.set_page_config(
     page_title="Delaware County Census Explorer",
     layout="wide"
 )
 
-# -----------------------------
-# Sidebar
-# -----------------------------
-st.sidebar.title("Controls")
+st.title("Delaware County Census Explorer")
+
+# -----------------------------------
+# Cached Data Loader
+# -----------------------------------
+@st.cache_data
+def load_default_data():
+    """Loads the default local census CSV."""
+    try:
+        df = load_local_file(CENSUS_DATA_PATH)
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        return pd.DataFrame()
+
+df = load_default_data()
+
+# -----------------------------------
+# Sidebar Controls
+# -----------------------------------
+st.sidebar.header("Controls")
 
 section = st.sidebar.radio(
     "Choose a section:",
-    ["Overview", "Trends", "NLP Q&A", "Download"]
+    ["Overview", "Trends", "Fetch From API", "Download"]
 )
 
-# -----------------------------
-# Cached data loader
-# -----------------------------
-@st.cache_data
-def get_data():
-    # df = load_data()
-    # return df
-    return pd.DataFrame()  # placeholder until we connect your backend
-
-df = get_data()
-
-# -----------------------------
+# -----------------------------------
 # Overview Section
-# -----------------------------
+# -----------------------------------
 if section == "Overview":
-    st.title("Delaware County Census Overview")
+    st.subheader("County Overview")
 
-    st.write("Summary metrics will go here.")
-    # processed = process_data(df)
-    # st.dataframe(processed)
+    if df.empty:
+        st.warning("No data loaded.")
+    else:
+        st.write("Raw Delaware County Census Data:")
+        st.dataframe(df)
 
-# -----------------------------
+        st.write("Filtered Delaware County Rows:")
+        filtered = filter_delaware_county(df)
+        st.dataframe(filtered)
+
+# -----------------------------------
 # Trends Section
-# -----------------------------
+# -----------------------------------
 elif section == "Trends":
-    st.title("Trends Over Time")
+    st.subheader("Trends Over Time")
 
-    st.write("Trend charts will go here.")
-    # fig = generate_basic_plot(df, "year", "population")
-    # st.image(fig)
+    if df.empty:
+        st.warning("No data available for trend analysis.")
+    else:
+        if "year" in df.columns:
+            st.line_chart(df.set_index("year")["population"])
+        else:
+            st.info("No 'year' column found — cannot plot trends.")
 
-# -----------------------------
-# NLP Section
-# -----------------------------
-elif section == "NLP Q&A":
-    st.title("Ask a Question")
+# -----------------------------------
+# Fetch From API Section
+# -----------------------------------
+elif section == "Fetch From API":
+    st.subheader("Fetch Census Data From API")
 
-    query = st.text_input("Ask something about Delaware County census data")
+    year = st.number_input("Year", min_value=2000, max_value=2024, value=DEFAULT_YEAR)
+    dataset = st.text_input("Dataset (e.g., acs/acs5)", value="acs/acs5")
+    variables = st.text_input("Variables (comma-separated)", value="NAME,B01001_001E")
 
-    if query:
-        st.write("Interpreting your question...")
-        # intent = parse_query(query)
-        # result = handle_intent(intent, df)
-        # st.write(result)
+    if st.button("Fetch Data"):
+        vars_list = [v.strip() for v in variables.split(",")]
 
-# -----------------------------
+        try:
+            api_df = fetch_census_api(
+                year=year,
+                dataset=dataset,
+                variables=vars_list
+            )
+            st.success("Data fetched successfully!")
+            st.dataframe(api_df)
+
+            if st.button("Save to RAW folder"):
+                path = save_raw_df(api_df, f"api_{year}")
+                st.success(f"Saved to {path}")
+
+        except Exception as e:
+            st.error(f"API Error: {e}")
+
+# -----------------------------------
 # Download Section
-# -----------------------------
+# -----------------------------------
 elif section == "Download":
-    st.title("Download Data")
+    st.subheader("Download Data")
 
-    st.write("Download cleaned or raw data.")
-    # st.download_button("Download CSV", df.to_csv(index=False), "delco_data.csv")
+    if df.empty:
+        st.warning("No data available to download.")
+    else:
+        st.download_button(
+            "Download CSV",
+            df.to_csv(index=False),
+            file_name="delco_census.csv",
+            mime="text/csv"
+        )
